@@ -7,7 +7,7 @@ namespace Core
     public class ProductionBuilding : MonoBehaviour
     {
         [SerializeField]
-        private GameObject gameManager;
+        private GameObject gameManagerObject;
 
         [SerializeField]
         private GameResource resourceType;
@@ -19,13 +19,15 @@ namespace Core
         private Slider _slider;
 
         private ResourceBank _bank;
+        private GameManager _gameManager;
 
         private void Start()
         {
+            _gameManager = gameManagerObject.GetComponent<GameManager>();
             _button = GetComponentInChildren<Button>();
             _slider = GetComponentInChildren<Slider>();
             _slider.gameObject.SetActive(false);
-            _bank = gameManager.GetComponent<GameManager>().ResourceBank;
+            _bank = _gameManager.ResourceBank;
             _button.onClick.AddListener(OnButtonClick);
         }
 
@@ -33,14 +35,16 @@ namespace Core
 
         IEnumerator ProduceResource()
         {
+            var calculatedProductionTime = productionTime * (1 - (_gameManager.ResourceProductionLevels[resourceType].Value - 1) / 100f);
+
             _button.interactable = false;
             _slider.gameObject.SetActive(true);
 
-            float finishTime = Time.time + productionTime;
+            float finishTime = Time.time + calculatedProductionTime;
 
             while (Time.time < finishTime)
             {
-                _slider.value = Mathf.Lerp(0, 1, 1 - (finishTime - Time.time) / productionTime);
+                _slider.value = Mathf.Lerp(0, 1, 1 - (finishTime - Time.time) / calculatedProductionTime);
                 yield return null;
             }
 
